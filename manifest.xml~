@@ -1,0 +1,20 @@
+<package>
+  <description brief="scene_analyzer">
+
+     scene_analyzer
+
+  </description>
+  <author>Stefan</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/scene_analyzer</url>
+  <depend package="rospy"/>
+  <depend package="roscpp"/>
+  <!--depend package="cob_people_detection_msgs"/-->
+  <depend package="opencv2" />
+  <depend package="cv_bridge" />
+  <depend package="pcl"/>
+  <depend package="pcl_ros"/>
+</package>
+
+

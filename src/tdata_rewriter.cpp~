@@ -1,0 +1,132 @@
+#include <iostream>
+#include <fstream>
+#include <opencv/cv.h>
+#include <opencv/highgui.h>
+#include "boost/filesystem/operations.hpp"
+#include "boost/filesystem/convenience.hpp"
+#include <boost/thread/mutex.hpp>
+#include "boost/filesystem/path.hpp"
+#include "boost/lexical_cast.hpp"
+#include "boost/filesystem.hpp"
+
+void rewrite_tdata(std::string& training_path,std::string tdata, std::string& add_label)
+{
+//	 TODO
+//	read out existing tdata and label-to-add from other tdata, write new tdata xml with combined content.
+
+	cv::FileStorage fileStorageRead(training_path + "tdata2_combo.xml", cv::FileStorage::READ);
+	if (!fileStorageRead.isOpened())
+	{
+		std::cout << "Error: load Training Data: Can't open " << training_path+"tdata2_combo.xml" << ".\n" << std::endl;
+	}
+
+	// labels
+	std::vector<std::string> face_labels, face_images, face_depths;
+	face_labels.clear();
+	face_images.clear();
+	face_depths.clear();
+	int old_number_entries = (int)fileStorageRead["number_entries"];
+	// read current entries
+	for(int i=0; i<old_number_entries; i++)
+	{
+		// labels
+		std::ostringstream tag_label1, tag_label2, tag_label3;
+		tag_label1 << "label_" << i;
+		std::string label = (std::string)fileStorageRead[tag_label1.str().c_str()];
+		face_labels.push_back(label);
+		tag_label2 << "image_" << i;
+		std::string image = (std::string)fileStorageRead[tag_label2.str().c_str()];
+		face_images.push_back(image);
+		tag_label3 << "depthmap_" << i;
+		std::string depth = (std::string)fileStorageRead[tag_label3.str().c_str()];
+		face_depths.push_back(depth);
+	}
+    fileStorageRead.release();
+    
+    // read entries from other tdata to add
+    cv::FileStorage fileStorageRead2(training_path + tdata, cv::FileStorage::READ);
+	if (!fileStorageRead2.isOpened())
+	{
+		std::cout << "Error: load Training Data: Can't open " << training_path+tdata << ".\n" <<std::endl;
+	}
+
+    old_number_entries = (int)fileStorageRead2["number_entries"];
+	// read current entries
+	for(int i=0; i<old_number_entries; i++)
+	{
+		// labels
+		std::ostringstream tag_label1, tag_label2, tag_label3;
+		tag_label1 << "label_" << i;        
+        std::string label = (std::string)fileStorageRead2[tag_label1.str().c_str()];
+        if (label == add_label)
+        {
+            face_labels.push_back(label);
+            tag_label2 << "image_" << i;
+            std::string image = (std::string)fileStorageRead2[tag_label2.str().c_str()];
+            face_images.push_back(image);
+            tag_label3 << "depthmap_" << i;
+            std::string depth = (std::string)fileStorageRead2[tag_label3.str().c_str()];
+            face_depths.push_back(depth);
+        }
+	}
+    fileStorageRead2.release();
+
+	//create tdata2.xml with newly added images.
+	cv::FileStorage fileStorageWrite(training_path+"tdata2_combo.xml", cv::FileStorage::WRITE);
+	if (fileStorageWrite.isOpened())
+	{
+		fileStorageWrite << "number_entries" << (int)face_labels.size();
+		for(int i=0; i<face_labels.size(); i++)
+		{
+			std::ostringstream tag, tag2, tag3;
+			std::ostringstream shortname_img, shortname_depth;
+            // face label
+            tag << "label_" << i;
+            fileStorageWrite << tag.str().c_str() << face_labels[i].c_str();
+
+            // face images
+            shortname_img << "img/" << i << ".bmp";
+            tag2 << "image_" << i;
+            fileStorageWrite << tag2.str().c_str() << face_images[i].c_str();
+
+            // depth images
+            shortname_depth << "depth/" << i << ".xml";
+            tag3 << "depthmap_" << i;
+            fileStorageWrite << tag3.str().c_str() << face_depths[i].c_str();
+        
+		}
+		fileStorageWrite.release();
+		face_labels.clear();
+		face_images.clear();
+		face_depths.clear();
+	}
+}
+
+int main (int argc, char** argv)
+{
+    std::cout << "Trying to mix tdata from several different creation methods" << std::endl;
+    std::string training_path = "/home/stefan/.ros/cob_people_detection/files/training_data/";
+    std::string tdata1 = "tdata_center.xml";
+    std::string tdata2 = "tdata_24_004.xml";
+    std::vector<std::string> labels1,labels2;
+    labels1.push_back("set_01");
+    labels1.push_back("set_03");
+    labels1.push_back("set_04");
+    labels2.push_back("set_05");
+    labels1.push_back("set_06");
+    labels1.push_back("set_07");
+    labels1.push_back("set_09");
+    labels1.push_back("set_10");
+    labels1.push_back("set_11"); 
+    labels2.push_back("set_07");
+    for (int i =0; i< labels1.size(); i++)
+    {
+        rewrite_tdata(training_path,tdata1,labels1[i]);
+        std::cout << "added " << labels1[i] << "./n" <<std::endl;
+    }
+    for (int i =0; i< labels2.size(); i++)
+    {
+        rewrite_tdata(training_path,tdata2,labels2[i]);
+        std::cout << "added " << labels2[i] << "./n" <<std::endl;
+    }
+}

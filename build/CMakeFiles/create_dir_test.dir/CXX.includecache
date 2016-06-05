@@ -1,0 +1,12 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/stefan/rgbd_db_tools/scene_analyzer/src/create_dir_test.cpp
+boost/filesystem.hpp
+/home/stefan/rgbd_db_tools/scene_analyzer/src/boost/filesystem.hpp
+

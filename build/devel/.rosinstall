@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/stefan/rgbd_db_tools/scene_analyzer/build/devel/setup.sh
